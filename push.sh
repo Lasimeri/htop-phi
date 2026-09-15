@@ -18,7 +18,8 @@ PKG="$here/build/htop-phi.tar.gz"
 "$P" exec -- sh -c 'setsid sh -c "TERM=xterm-256color exec /opt/phi/bin/htop -d 10 < /dev/ttyPHI0 > /dev/ttyPHI0 2>&1" & sleep 4; kill %1 2>/dev/null; pkill htop 2>/dev/null; echo "htop ran on the console tty for 4 s"'
 log="${XDG_RUNTIME_DIR:-/tmp/phictl-$(id -u)}/phictl/console.log"
 if [ -f "$log" ] && grep -a -q "Tasks:" "$log"; then
-    echo "push.sh: htop drew its screen on the card ($(grep -a -o 'Tasks: [0-9]*' "$log" | tail -1))"
+    # Strip the terminal escape sequences before quoting what htop drew.
+    echo "push.sh: htop drew its screen on the card ($(sed 's/\x1b\[[0-9;?]*[a-zA-Z]//g; s/\x1b[()][A-Z0-9]//g' "$log" | grep -a -o 'Tasks: [0-9]*, [0-9]* thr, [0-9]* kthr' | tail -1))"
 else
     echo "push.sh: console log not found or no screen detected (fine when the card was booted with sudo elsewhere)"
 fi
